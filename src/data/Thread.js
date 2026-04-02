@@ -20,6 +20,7 @@ const ThreadMessage = require("./ThreadMessage");
 const {THREAD_MESSAGE_TYPE, THREAD_STATUS, DISCORD_MESSAGE_ACTIVITY_TYPES} = require("./constants");
 const {isBlocked} = require("./blocked");
 const {messageContentToAdvancedMessageContent} = require("../utils");
+const { syncServerSideHistory } = require("./serverSideHistory");
 
 const escapeFormattingRegex = new RegExp("[_`~*|]", "g");
 
@@ -96,6 +97,7 @@ class Thread {
   async _postToThreadChannel(content, file = null) {
     try {
       let firstMessage;
+      await this._ensureThreadChannelWritable();
 
       const textContent = typeof content === "string" ? content : content.content;
       const contentObj = typeof content === "string" ? {} : content;
@@ -131,6 +133,24 @@ class Thread {
     }
   }
 
+  async _ensureThreadChannelWritable() {
+    if (! utils.isThreadInboxMode()) {
+      return;
+    }
+
+    const channel = await utils.getOrFetchChannel(bot, this.channel_id);
+    if (! channel || ! (channel instanceof Eris.ThreadChannel)) {
+      return;
+    }
+
+    if (channel.archived) {
+      await bot.editChannel(this.channel_id, {
+        archived: false,
+        locked: false,
+      });
+    }
+  }
+
   /**
    * @param {Object} data
    * @returns {Promise<ThreadMessage>}
@@ -154,7 +174,9 @@ class Thread {
       .where("id", insertedIds[0])
       .select();
 
-    return new ThreadMessage(threadMessage[0]);
+    const result = new ThreadMessage(threadMessage[0]);
+    await syncServerSideHistory(this);
+    return result;
   }
 
   /**
@@ -167,6 +189,8 @@ class Thread {
     await knex("thread_messages")
       .where("id", id)
       .update(data);
+
+    await syncServerSideHistory(this);
   }
 
   /**
@@ -178,6 +202,8 @@ class Thread {
     await knex("thread_messages")
       .where("id", id)
       .delete();
+
+    await syncServerSideHistory(this);
   }
 
   /**
@@ -766,13 +792,23 @@ class Thread {
         status: THREAD_STATUS.CLOSED
       });
 
-    // Delete channel
-    const channel = bot.getChannel(this.channel_id);
+    // Archive threads in thread-mode so Discord itself remains the primary history surface.
+    const channel = await utils.getOrFetchChannel(bot, this.channel_id);
     if (channel) {
-      console.log(`Deleting channel ${this.channel_id}`);
-      await channel.delete("Thread closed");
+      if (channel instanceof Eris.ThreadChannel) {
+        console.log(`Archiving thread ${this.channel_id}`);
+        await bot.editChannel(this.channel_id, {
+          archived: true,
+          locked: true,
+          autoArchiveDuration: config.threadAutoArchiveDuration,
+        }, "Thread closed");
+      } else {
+        console.log(`Deleting channel ${this.channel_id}`);
+        await channel.delete("Thread closed");
+      }
     }
 
+    await syncServerSideHistory(this);
     await callAfterThreadCloseHooks({ threadId: this.id });
   }
 

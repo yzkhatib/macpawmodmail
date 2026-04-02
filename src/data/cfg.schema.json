@@ -105,6 +105,14 @@
     "newThreadCategoryId": {
       "type": "string"
     },
+    "newThreadChannelId": {
+      "type": "string"
+    },
+    "threadAutoArchiveDuration": {
+      "type": "number",
+      "enum": [60, 1440, 4320, 10080],
+      "default": 10080
+    },
     "mentionRole": {
       "$ref": "#/definitions/stringArray",
       "default": "none"
@@ -448,6 +456,14 @@
     "allowNotes": {
       "$ref": "#/definitions/customBoolean",
       "default": true
+    },
+
+    "serverSideHistoryDirectory": {
+      "type": "string",
+      "default": "server-history"
+    },
+    "serverSideSaveToggleRoleId": {
+      "type": "string"
     },
 
     "logStorage": {

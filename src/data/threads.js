@@ -1,4 +1,5 @@
-const {User, Member, Message} = require("eris");
+const Eris = require("eris");
+const {User, Member, Message} = Eris;
 
 const transliterate = require("transliteration");
 const moment = require("moment");
@@ -184,40 +185,76 @@ async function createNewThreadForUser(user, opts = {}) {
 
     console.log(`[NOTE] Creating new thread channel ${opts.channelName}`);
 
-    // Figure out which category we should place the thread channel in
-    let newThreadCategoryId = (hookResult && hookResult.categoryId) || opts.categoryId || null;
-
-    if (! newThreadCategoryId && config.categoryAutomation.newThreadFromServer) {
-      // Categories for specific source guilds (in case of multiple main guilds)
-      for (const [guildId, categoryId] of Object.entries(config.categoryAutomation.newThreadFromServer)) {
-        if (userGuildData.has(guildId)) {
-          newThreadCategoryId = categoryId;
-          break;
-        }
-      }
-    }
-
-    if (! newThreadCategoryId && config.categoryAutomation.newThread) {
-      // Blanket category id for all new threads (also functions as a fallback for the above)
-      newThreadCategoryId = config.categoryAutomation.newThread;
-    }
-
     // Attempt to create the inbox channel for this thread
     let createdChannel;
     try {
-      createdChannel = await utils.getInboxGuild().createChannel(opts.channelName, DISCORD_CHANNEL_TYPES.GUILD_TEXT, {
-        reason: "New Modmail thread",
-        parentID: newThreadCategoryId,
-      });
+      if (utils.isThreadInboxMode()) {
+        const parentChannel = utils.getInboxThreadParentChannel();
+        createdChannel = await parentChannel.createThread({
+          autoArchiveDuration: config.threadAutoArchiveDuration,
+          name: opts.channelName,
+          reason: "New Modmail thread",
+          type: Eris.Constants.ChannelTypes.GUILD_PUBLIC_THREAD,
+        });
+      } else {
+        // Figure out which category we should place the thread channel in
+        let newThreadCategoryId = (hookResult && hookResult.categoryId) || opts.categoryId || null;
+
+        if (! newThreadCategoryId && config.categoryAutomation.newThreadFromServer) {
+          // Categories for specific source guilds (in case of multiple main guilds)
+          for (const [guildId, categoryId] of Object.entries(config.categoryAutomation.newThreadFromServer)) {
+            if (userGuildData.has(guildId)) {
+              newThreadCategoryId = categoryId;
+              break;
+            }
+          }
+        }
+
+        if (! newThreadCategoryId && config.categoryAutomation.newThread) {
+          // Blanket category id for all new threads (also functions as a fallback for the above)
+          newThreadCategoryId = config.categoryAutomation.newThread;
+        }
+
+        createdChannel = await utils.getInboxGuild().createChannel(opts.channelName, DISCORD_CHANNEL_TYPES.GUILD_TEXT, {
+          reason: "New Modmail thread",
+          parentID: newThreadCategoryId,
+        });
+      }
     } catch (err) {
       // Fix for disallowed channel names in servers in Server Discovery
       if (err.message.includes("Contains words not allowed for servers in Server Discovery")) {
         const replacedChannelName = "badname-0000";
         try {
-          createdChannel = await utils.getInboxGuild().createChannel(replacedChannelName, DISCORD_CHANNEL_TYPES.GUILD_TEXT, {
-            reason: "New Modmail thread",
-            parentID: newThreadCategoryId,
-          });
+          if (utils.isThreadInboxMode()) {
+            const parentChannel = utils.getInboxThreadParentChannel();
+            createdChannel = await parentChannel.createThread({
+              autoArchiveDuration: config.threadAutoArchiveDuration,
+              name: replacedChannelName,
+              reason: "New Modmail thread",
+              type: Eris.Constants.ChannelTypes.GUILD_PUBLIC_THREAD,
+            });
+          } else {
+            // Figure out which category we should place the thread channel in
+            let newThreadCategoryId = (hookResult && hookResult.categoryId) || opts.categoryId || null;
+
+            if (! newThreadCategoryId && config.categoryAutomation.newThreadFromServer) {
+              for (const [guildId, categoryId] of Object.entries(config.categoryAutomation.newThreadFromServer)) {
+                if (userGuildData.has(guildId)) {
+                  newThreadCategoryId = categoryId;
+                  break;
+                }
+              }
+            }
+
+            if (! newThreadCategoryId && config.categoryAutomation.newThread) {
+              newThreadCategoryId = config.categoryAutomation.newThread;
+            }
+
+            createdChannel = await utils.getInboxGuild().createChannel(replacedChannelName, DISCORD_CHANNEL_TYPES.GUILD_TEXT, {
+              reason: "New Modmail thread",
+              parentID: newThreadCategoryId,
+            });
+          }
         } catch (_err) {
           throw _err;
         }

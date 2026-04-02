@@ -7,6 +7,11 @@ module.exports = ({ bot, knex, config, commands }) => {
   if (! config.allowMove) return;
 
   commands.addInboxThreadCommand("move", "<category:string$>", async (msg, args, thread) => {
+    if (config.newThreadChannelId) {
+      thread.postSystemMessage("Moving inbox items is not supported when modmail uses Discord threads.");
+      return;
+    }
+
     const searchStr = args.category;
     const normalizedSearchStr = transliterate.slugify(searchStr);
 

@@ -16,6 +16,8 @@
  * @property {string} [closeMessage]
  * @property {boolean} [allowUserClose=false]
  * @property {string} [newThreadCategoryId]
+ * @property {string} [newThreadChannelId]
+ * @property {number} [threadAutoArchiveDuration=10080]
  * @property {array} [mentionRole="none"]
  * @property {boolean} [pingOnBotMention=true]
  * @property {string} [botMentionResponse]
@@ -87,6 +89,8 @@
  * @property {boolean} [pinThreadHeader=false]
  * @property {boolean} [showResponseMessageInThreadChannel=true]
  * @property {boolean} [allowNotes=true]
+ * @property {string} [serverSideHistoryDirectory="server-history"]
+ * @property {string} [serverSideSaveToggleRoleId]
  * @property {string} [logStorage="local"]
  * @property {object} [logOptions]
  * @property {string} logOptions.attachmentDirectory

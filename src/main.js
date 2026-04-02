@@ -372,6 +372,7 @@ function getBasePlugins() {
     "file:./src/modules/id",
     "file:./src/modules/alert",
     "file:./src/modules/slackNotifications",
+    "file:./src/modules/serverSideSave",
     "file:./src/modules/joinLeaveNotification",
     "file:./src/modules/roles",
     "file:./src/modules/notes",

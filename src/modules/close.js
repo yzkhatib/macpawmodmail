@@ -49,9 +49,10 @@ module.exports = ({ bot, knex, config, commands }) => {
 
     const logUrl = await getLogUrl(thread);
     if (logUrl) {
+      const linkLabel = thread.channel_id && utils.isThreadInboxMode() ? "Thread" : "Logs";
       utils.postLog(utils.trimAll(`
           ${body}
-          Logs: ${logUrl}
+          ${linkLabel}: ${logUrl}
         `));
       return;
     }
@@ -92,7 +93,7 @@ module.exports = ({ bot, knex, config, commands }) => {
 
   scheduledCloseLoop();
 
-  // Close a thread. Closing a thread saves a log of the channel's contents and then deletes the channel.
+  // Close a thread. In Discord-thread mode this archives and locks the thread; otherwise it deletes the channel.
   commands.addGlobalCommand("close", "[opts...]", async (msg, args) => {
     let thread, closedBy;
 
@@ -187,7 +188,7 @@ module.exports = ({ bot, knex, config, commands }) => {
 
   // Auto-close threads if their channel is deleted
   bot.on("channelDelete", async (channel) => {
-    if (! (channel instanceof Eris.TextChannel)) return;
+    if (! (channel instanceof Eris.TextChannel) && ! (channel instanceof Eris.ThreadChannel)) return;
     if (channel.guild.id !== utils.getInboxGuild().id) return;
 
     const thread = await threads.findOpenThreadByChannelId(channel.id);

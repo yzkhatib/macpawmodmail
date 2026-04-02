@@ -58,6 +58,35 @@ function getLogChannel() {
   return _logChannel;
 }
 
+/**
+ * @returns {boolean}
+ */
+function isThreadInboxMode() {
+  return Boolean(config.newThreadChannelId);
+}
+
+/**
+ * Returns the designated parent channel for Discord thread-based modmail inboxes
+ * @returns {Eris.TextChannel}
+ */
+function getInboxThreadParentChannel() {
+  if (! config.newThreadChannelId) {
+    throw new BotError("newThreadChannelId is not configured");
+  }
+
+  const _inboxGuild = getInboxGuild();
+  const parentChannel = _inboxGuild.channels.get(config.newThreadChannelId);
+  if (! parentChannel) {
+    throw new BotError("Thread parent channel (newThreadChannelId) not found!");
+  }
+
+  if (! (parentChannel instanceof Eris.TextChannel)) {
+    throw new BotError("Make sure newThreadChannelId is set to a text channel!");
+  }
+
+  return parentChannel;
+}
+
 function postLog(...args) {
   return getLogChannel().createMessage(...args);
 }
@@ -205,6 +234,10 @@ async function getSelfUrl(path = "") {
     const ip = await getSelfIp();
     return `http://${ip}:${port}/${path}`;
   }
+}
+
+function getDiscordChannelUrl(guildId, channelId) {
+  return `https://discord.com/channels/${guildId}/${channelId}`;
 }
 
 /**
@@ -573,10 +606,12 @@ const END_CODEBLOCK = "```";
 
 module.exports = {
   getInboxGuild,
+  getInboxThreadParentChannel,
   getMainGuilds,
   getLogChannel,
   postError,
   postLog,
+  isThreadInboxMode,
 
   isStaff,
   messageIsOnInboxServer,
@@ -587,6 +622,7 @@ module.exports = {
   getUserMention,
   getTimestamp,
   disableLinkPreviews,
+  getDiscordChannelUrl,
   getSelfUrl,
   getMainRole,
   delayStringRegex,

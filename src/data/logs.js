@@ -157,6 +157,20 @@ addStorageType("local", {
   },
 });
 
+addStorageType("discordThread", {
+  save() {
+    return null;
+  },
+
+  getUrl(thread) {
+    if (! thread.channel_id) {
+      return null;
+    }
+
+    return utils.getDiscordChannelUrl(config.inboxServerId, thread.channel_id);
+  },
+});
+
 const getLogAttachmentFilename = threadId => {
   const filename = `${threadId}.txt`;
   const fullPath = path.join(config.logOptions.attachmentDirectory, filename);

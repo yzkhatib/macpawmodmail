@@ -9,6 +9,10 @@ const LOG_LINES_PER_PAGE = 10;
 
 module.exports = ({ bot, knex, config, commands, hooks }) => {
   const addOptQueryStringToUrl = (url, args) => {
+    if (url.startsWith("https://discord.com/channels/")) {
+      return url;
+    }
+
     const params = [];
     if (args.verbose) params.push("verbose=1");
     if (args.simple) params.push("simple=1");
@@ -92,7 +96,8 @@ module.exports = ({ bot, knex, config, commands, hooks }) => {
 
     const logUrl = await getLogUrl(thread);
     if (logUrl) {
-      channel.createMessage(`Open the following link to view the log for thread #${thread.thread_number}:\n<${addOptQueryStringToUrl(logUrl, args)}>`);
+      const linkLabel = thread.channel_id && utils.isThreadInboxMode() ? "Discord thread" : "log";
+      channel.createMessage(`Open the following link to view the ${linkLabel} for thread #${thread.thread_number}:\n<${addOptQueryStringToUrl(logUrl, args)}>`);
       return;
     }
 
