@@ -23,6 +23,7 @@
  * @property {string} [botMentionResponse]
  * @property {array} [inboxServerPermission=["manageMessages"]]
  * @property {boolean} [alwaysReply=false]
+ * @property {string} [internalMessagePrefix]
  * @property {boolean} [alwaysReplyAnon=false]
  * @property {boolean} [forceAnon=false]
  * @property {boolean} [useNicknames=false]

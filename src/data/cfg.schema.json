@@ -133,6 +133,9 @@
       "$ref": "#/definitions/customBoolean",
       "default": false
     },
+    "internalMessagePrefix": {
+      "type": "string"
+    },
     "alwaysReplyAnon": {
       "$ref": "#/definitions/customBoolean",
       "default": false
