@@ -143,10 +143,12 @@ function initBaseMessageHandlers() {
       && msg.content.startsWith(config.internalMessagePrefix),
     );
 
-    if (! msg.author.bot && (msg.content.startsWith(config.prefix) || msg.content.startsWith(config.snippetPrefix))) {
+    if (! msg.author.bot && hasInternalPrefix) {
+      thread.saveChatMessageToLogs(msg);
+    } else if (! msg.author.bot && (msg.content.startsWith(config.prefix) || msg.content.startsWith(config.snippetPrefix))) {
       // Save commands as "command messages"
       thread.saveCommandMessageToLogs(msg);
-    } else if (! msg.author.bot && config.alwaysReply && ! hasInternalPrefix) {
+    } else if (! msg.author.bot && config.alwaysReply) {
       // AUTO-REPLY: If config.alwaysReply is enabled, send all chat messages in thread channels as replies
       if (! utils.isStaff(msg.member)) return; // Only staff are allowed to reply
 
