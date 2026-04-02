@@ -303,7 +303,7 @@ async function createNewThreadForUser(user, opts = {}) {
       await addPrivateThreadMembers(createdChannel, opts.mentionRole || config.mentionRole);
     }
 
-    if (! quiet) {
+    if (! quiet && ! utils.isThreadInboxMode()) {
       // Ping moderators of the new thread
       const { mention: staffMention, allowedMentions } = opts.mentionRole
         ? await utils.getInboxMentionPayload(opts.mentionRole, { requireAccess: true })
