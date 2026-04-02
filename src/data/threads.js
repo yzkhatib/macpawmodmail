@@ -35,7 +35,7 @@ function _addToThreadCreationQueue(fn) {
 }
 
 function createPrivateInboxThread(parentChannel, name) {
-  return parentChannel.createThread({
+  return bot.createThread(parentChannel.id, {
     autoArchiveDuration: config.threadAutoArchiveDuration,
     invitable: false,
     name,
