@@ -45,14 +45,7 @@ function createPrivateInboxThread(parentChannel, name) {
 }
 
 async function addPrivateThreadMembers(threadChannel, mentionRoles = config.mentionRole) {
-  const inboxPermissionEntries = Array.isArray(config.inboxServerPermission)
-    ? config.inboxServerPermission
-    : [config.inboxServerPermission];
-  const threadMemberEntries = [
-    ...inboxPermissionEntries,
-    ...utils.getValidMentionRoles(mentionRoles),
-  ];
-  const userIds = await utils.getInboxUserIdsFromEntries(threadMemberEntries, {
+  const userIds = await utils.getInboxUserIdsFromEntries(utils.getValidMentionRoles(mentionRoles), {
     requireAccess: true,
   });
 
