@@ -304,8 +304,11 @@ function initBaseMessageHandlers() {
 
     let content;
     const mainGuilds = utils.getMainGuilds();
-    const staffMention = (config.pingOnBotMention ? utils.getInboxMention() : "");
-    const allowedMentions = (config.pingOnBotMention ? utils.getInboxMentionAllowedMentions() : undefined);
+    const mentionPayload = config.pingOnBotMention
+      ? await utils.getInboxMentionPayload()
+      : { mention: "", allowedMentions: undefined };
+    const staffMention = mentionPayload.mention;
+    const allowedMentions = mentionPayload.allowedMentions;
 
     const userMentionStr = `**${msg.author.username}** (\`${msg.author.id}\`)`;
     const messageLink = `https:\/\/discord.com\/channels\/${channel.guild.id}\/${channel.id}\/${msg.id}`;

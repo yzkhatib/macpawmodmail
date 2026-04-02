@@ -10,6 +10,7 @@ const userMentionRegex = /^<@!?([0-9]+?)>$/;
 let inboxGuild = null;
 let mainGuilds = [];
 let logChannel = null;
+let inboxGuildMemberFetchPromise = null;
 
 /**
  * @returns {Eris~Guild}
@@ -371,6 +372,118 @@ function getInboxMentionAllowedMentions() {
   return mentionRolesToAllowedMentions(mentionRoles);
 }
 
+async function ensureInboxGuildMembersLoaded() {
+  const guild = getInboxGuild();
+
+  if (guild.memberCount != null && guild.members.size >= guild.memberCount) {
+    return guild;
+  }
+
+  if (! inboxGuildMemberFetchPromise) {
+    inboxGuildMemberFetchPromise = guild.fetchAllMembers()
+      .catch(err => {
+        inboxGuildMemberFetchPromise = null;
+        throw err;
+      })
+      .then(() => {
+        inboxGuildMemberFetchPromise = null;
+        return guild;
+      });
+  }
+
+  await inboxGuildMemberFetchPromise;
+  return guild;
+}
+
+async function getInboxUserIdsFromEntries(entries) {
+  const normalizedEntries = getValidMentionRoles(entries);
+  const guild = getInboxGuild();
+  const roleIds = new Set();
+  const userIds = new Set();
+
+  for (const entry of normalizedEntries) {
+    if (! isSnowflake(entry)) {
+      continue;
+    }
+
+    if (guild.roles.has(entry)) {
+      roleIds.add(entry);
+    } else {
+      userIds.add(entry);
+    }
+  }
+
+  if (roleIds.size > 0) {
+    await ensureInboxGuildMembersLoaded();
+
+    for (const member of guild.members.values()) {
+      if (member.roles.some(roleId => roleIds.has(roleId))) {
+        userIds.add(member.id);
+      }
+    }
+  }
+
+  return Array.from(userIds);
+}
+
+async function getInboxMentionPayload(mentionRoles = config.mentionRole) {
+  const normalizedRoles = getValidMentionRoles(mentionRoles);
+  const guild = getInboxGuild();
+  const directUserIds = new Set();
+  const mentionableRoleIds = [];
+  const nonMentionableRoleIds = [];
+  let everyone = false;
+
+  for (const role of normalizedRoles) {
+    if (role === "here" || role === "everyone") {
+      everyone = true;
+      continue;
+    }
+
+    if (! isSnowflake(role)) {
+      continue;
+    }
+
+    if (guild.roles.has(role)) {
+      const guildRole = guild.roles.get(role);
+      if (guildRole && guildRole.mentionable) {
+        mentionableRoleIds.push(role);
+      } else {
+        nonMentionableRoleIds.push(role);
+      }
+    } else {
+      directUserIds.add(role);
+    }
+  }
+
+  const expandedRoleUserIds = await getInboxUserIdsFromEntries(nonMentionableRoleIds);
+  for (const userId of expandedRoleUserIds) {
+    directUserIds.add(userId);
+  }
+
+  const mentionParts = [];
+  if (everyone) {
+    mentionParts.push("@here");
+  }
+
+  for (const roleId of mentionableRoleIds) {
+    mentionParts.push(`<@&${roleId}>`);
+  }
+
+  for (const userId of directUserIds) {
+    mentionParts.push(`<@!${userId}>`);
+  }
+
+  return {
+    mention: mentionParts.length > 0 ? `${mentionParts.join(" ")} ` : "",
+    allowedMentions: {
+      everyone,
+      roles: mentionableRoleIds,
+      users: Array.from(directUserIds),
+    },
+  };
+}
+
 function postSystemMessageWithFallback(channel, thread, text) {
   if (thread) {
     thread.postSystemMessage(text);
@@ -633,6 +746,9 @@ module.exports = {
   getInboxMention,
   mentionRolesToAllowedMentions,
   getInboxMentionAllowedMentions,
+  ensureInboxGuildMembersLoaded,
+  getInboxUserIdsFromEntries,
+  getInboxMentionPayload,
 
   postSystemMessageWithFallback,
 

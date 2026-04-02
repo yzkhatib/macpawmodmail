@@ -44,6 +44,29 @@ function createPrivateInboxThread(parentChannel, name) {
   });
 }
 
+async function addPrivateThreadMembers(threadChannel, mentionRoles = config.mentionRole) {
+  const inboxPermissionEntries = Array.isArray(config.inboxServerPermission)
+    ? config.inboxServerPermission
+    : [config.inboxServerPermission];
+  const threadMemberEntries = [
+    ...inboxPermissionEntries,
+    ...utils.getValidMentionRoles(mentionRoles),
+  ];
+  const userIds = await utils.getInboxUserIdsFromEntries(threadMemberEntries);
+
+  for (const userId of userIds) {
+    if (userId === bot.user.id) {
+      continue;
+    }
+
+    try {
+      await bot.joinThread(threadChannel.id, userId);
+    } catch (err) {
+      console.warn(`[WARN] Failed to add ${userId} to private thread ${threadChannel.id}: ${err.message}`);
+    }
+  }
+}
+
 /**
  * @param {String} id
  * @returns {Promise<Thread>}
@@ -277,17 +300,17 @@ async function createNewThreadForUser(user, opts = {}) {
 
     const newThread = await findById(newThreadId);
 
+    if (utils.isThreadInboxMode() && createdChannel instanceof Eris.ThreadChannel) {
+      await addPrivateThreadMembers(createdChannel, opts.mentionRole || config.mentionRole);
+    }
+
     if (! quiet) {
       // Ping moderators of the new thread
-      const staffMention = opts.mentionRole
-        ? utils.mentionRolesToMention(utils.getValidMentionRoles(opts.mentionRole))
-        : utils.getInboxMention();
+      const { mention: staffMention, allowedMentions } = opts.mentionRole
+        ? await utils.getInboxMentionPayload(opts.mentionRole)
+        : await utils.getInboxMentionPayload();
 
       if (staffMention.trim() !== "") {
-        const allowedMentions = opts.mentionRole
-          ? utils.mentionRolesToAllowedMentions(utils.getValidMentionRoles(opts.mentionRole))
-          : utils.getInboxMentionAllowedMentions();
-
         await newThread.postNonLogMessage({
           content: `${staffMention}New modmail thread (${newThread.user_name})`,
           allowedMentions,
