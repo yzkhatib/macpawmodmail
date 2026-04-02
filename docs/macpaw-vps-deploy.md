@@ -28,6 +28,7 @@ Before the bot can actually handle modmail, the bot application must:
 - have `View Channels`, `Send Messages`, `Manage Channels`, `Manage Messages`, `Embed Links`, `Attach Files`, and `Read Message History`
 - have access to the staff category used for new thread channels
 - have access to the log channel and attachment storage channel configured in `.env`
+- if Slack notifications are enabled later, have a Slack incoming webhook URL ready
 
 ## Updates
 
@@ -45,3 +46,4 @@ pm2 save
 - The app still supports `config.ini`, but `.env` is cleaner for VPS deploys and keeps secrets out of git.
 - SQLite is the default database backend and stores data under `db/data.sqlite`.
 - If you change configuration values, restart the PM2 process.
+- Slack notifications for new user messages are supported via webhook and are off by default.

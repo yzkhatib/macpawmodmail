@@ -2,6 +2,7 @@
 /.idea
 /node_modules
 /.env
+/discord-app-local.txt
 /welcome.png
 /update.sh
 

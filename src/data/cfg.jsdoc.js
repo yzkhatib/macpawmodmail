@@ -82,6 +82,8 @@
  * @property {boolean} [breakFormattingForNames=true]
  * @property {boolean} [autoAlert=false]
  * @property {string} [autoAlertDelay="2m"] Delay before auto-alert kicks in. Uses the same format as timed close; for example 1m30s for 1 minute and 30 seconds.
+ * @property {boolean} [slackNotificationEnabled=false]
+ * @property {string} [slackNotificationWebhookUrl]
  * @property {boolean} [pinThreadHeader=false]
  * @property {boolean} [showResponseMessageInThreadChannel=true]
  * @property {boolean} [allowNotes=true]

@@ -371,6 +371,7 @@ function getBasePlugins() {
     "file:./src/modules/newthread",
     "file:./src/modules/id",
     "file:./src/modules/alert",
+    "file:./src/modules/slackNotifications",
     "file:./src/modules/joinLeaveNotification",
     "file:./src/modules/roles",
     "file:./src/modules/notes",
