@@ -1,6 +1,7 @@
 /.vscode
 /.idea
 /node_modules
+/.env
 /welcome.png
 /update.sh
 

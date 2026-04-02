@@ -1,27 +1,36 @@
-# Modmail for Discord
-Modmail Bot is a bot for [Discord](https://discord.com/) that allows users to DM the bot to contact the server's moderators/staff
-without messaging them individually or pinging them publically on the server.
-These DMs get relayed to modmail *threads*, channels where staff members can reply to and talk with the user.
-To the user, the entire process happens in DMs with the bot.
+# MacPaw Mod Mail
 
-Inspired by Reddit's modmail system.
+This repository is a MacPaw deployment fork of [Dragory/modmailbot](https://github.com/Dragory/modmailbot).
+It stays close to upstream and adds production scaffolding for a VPS + PM2 deployment without committing secrets.
 
-**⚠ Note on updating to v3.0.0:** If you're currently using a *very* old version of the bot, from before February 2018, you'll first need to update to v2.30.1 and run the bot once before updating to v3.0.0.
+## MacPaw-specific additions
 
-Always take a backup of your `db/data.sqlite` file before updating the bot.
+- `.env.example` for environment-variable based configuration
+- `docs/macpaw-vps-deploy.md` with VPS deployment notes
+- PM2 process metadata renamed for the `macpawmodmail` app
+- Package metadata renamed for the MacPaw fork
 
-## Getting started
-* **[🛠️ Setting up the bot](docs/setup.md)**
-* **[✨ Updating the bot](docs/updating.md)**
-* **[🙋 Frequently Asked Questions](docs/faq.md)**
-* [📝 Configuration](docs/configuration.md)
-* [🤖 Commands](docs/commands.md)
-* [📋 Snippets](docs/snippets.md)
-* [🧩 Plugins](docs/plugins.md)
-* [📌 Release notes](CHANGELOG.md)
-* [📚 **Community Guides & Resources**](https://github.com/Dragory/modmailbot-community-resources)
+## Quick start
 
-## Support server
-If you need help with setting up the bot or would like to discuss other things related to it, join the support server on Discord here:
+1. Copy `.env.example` to `.env`
+2. Fill in your Discord bot token and Discord IDs
+3. Run `npm ci`
+4. Start the bot with `pm2 start modmailbot-pm2.json` or `npm start`
 
-👉 **[Join support server](https://discord.gg/vRuhG9R)**
+## Upstream documentation
+
+- **[🛠️ Setting up the bot](docs/setup.md)**
+- **[✨ Updating the bot](docs/updating.md)**
+- **[🙋 Frequently Asked Questions](docs/faq.md)**
+- [📝 Configuration](docs/configuration.md)
+- [🤖 Commands](docs/commands.md)
+- [📋 Snippets](docs/snippets.md)
+- [🧩 Plugins](docs/plugins.md)
+- [📌 Release notes](CHANGELOG.md)
+- [📚 Community Guides & Resources](https://github.com/Dragory/modmailbot-community-resources)
+
+## Upstream support
+
+If you need help with the base project, the upstream support server is here:
+
+- [Join support server](https://discord.gg/vRuhG9R)
