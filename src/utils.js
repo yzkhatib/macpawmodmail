@@ -395,11 +395,15 @@ async function ensureInboxGuildMembersLoaded() {
   return guild;
 }
 
-async function getInboxUserIdsFromEntries(entries) {
+async function getInboxUserIdsFromEntries(entries, opts = {}) {
   const normalizedEntries = getValidMentionRoles(entries);
   const guild = getInboxGuild();
   const roleIds = new Set();
   const userIds = new Set();
+  const requireAccess = opts.requireAccess === true;
+  const parentChannel = requireAccess && isThreadInboxMode()
+    ? getInboxThreadParentChannel()
+    : null;
 
   for (const entry of normalizedEntries) {
     if (! isSnowflake(entry)) {
@@ -423,10 +427,25 @@ async function getInboxUserIdsFromEntries(entries) {
     }
   }
 
+  if (parentChannel) {
+    await ensureInboxGuildMembersLoaded();
+
+    for (const userId of Array.from(userIds)) {
+      const member = guild.members.get(userId);
+      const permissions = member ? parentChannel.permissionsOf(member) : null;
+      const canAccessThreadParent = permissions
+        && (permissions.has("viewChannel") || permissions.has("readMessages"));
+
+      if (! canAccessThreadParent) {
+        userIds.delete(userId);
+      }
+    }
+  }
+
   return Array.from(userIds);
 }
 
-async function getInboxMentionPayload(mentionRoles = config.mentionRole) {
+async function getInboxMentionPayload(mentionRoles = config.mentionRole, opts = {}) {
   const normalizedRoles = getValidMentionRoles(mentionRoles);
   const guild = getInboxGuild();
   const directUserIds = new Set();
@@ -456,7 +475,7 @@ async function getInboxMentionPayload(mentionRoles = config.mentionRole) {
     }
   }
 
-  const expandedRoleUserIds = await getInboxUserIdsFromEntries(nonMentionableRoleIds);
+  const expandedRoleUserIds = await getInboxUserIdsFromEntries(nonMentionableRoleIds, opts);
   for (const userId of expandedRoleUserIds) {
     directUserIds.add(userId);
   }

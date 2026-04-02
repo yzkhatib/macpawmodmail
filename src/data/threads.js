@@ -52,7 +52,9 @@ async function addPrivateThreadMembers(threadChannel, mentionRoles = config.ment
     ...inboxPermissionEntries,
     ...utils.getValidMentionRoles(mentionRoles),
   ];
-  const userIds = await utils.getInboxUserIdsFromEntries(threadMemberEntries);
+  const userIds = await utils.getInboxUserIdsFromEntries(threadMemberEntries, {
+    requireAccess: true,
+  });
 
   for (const userId of userIds) {
     if (userId === bot.user.id) {
@@ -307,8 +309,8 @@ async function createNewThreadForUser(user, opts = {}) {
     if (! quiet) {
       // Ping moderators of the new thread
       const { mention: staffMention, allowedMentions } = opts.mentionRole
-        ? await utils.getInboxMentionPayload(opts.mentionRole)
-        : await utils.getInboxMentionPayload();
+        ? await utils.getInboxMentionPayload(opts.mentionRole, { requireAccess: true })
+        : await utils.getInboxMentionPayload(config.mentionRole, { requireAccess: true });
 
       if (staffMention.trim() !== "") {
         await newThread.postNonLogMessage({
