@@ -34,6 +34,16 @@ function _addToThreadCreationQueue(fn) {
   return threadCreationQueue;
 }
 
+function createPrivateInboxThread(parentChannel, name) {
+  return parentChannel.createThread({
+    autoArchiveDuration: config.threadAutoArchiveDuration,
+    invitable: false,
+    name,
+    reason: "New Modmail thread",
+    type: Eris.Constants.ChannelTypes.GUILD_PRIVATE_THREAD,
+  });
+}
+
 /**
  * @param {String} id
  * @returns {Promise<Thread>}
@@ -190,12 +200,7 @@ async function createNewThreadForUser(user, opts = {}) {
     try {
       if (utils.isThreadInboxMode()) {
         const parentChannel = utils.getInboxThreadParentChannel();
-        createdChannel = await parentChannel.createThread({
-          autoArchiveDuration: config.threadAutoArchiveDuration,
-          name: opts.channelName,
-          reason: "New Modmail thread",
-          type: Eris.Constants.ChannelTypes.GUILD_PUBLIC_THREAD,
-        });
+        createdChannel = await createPrivateInboxThread(parentChannel, opts.channelName);
       } else {
         // Figure out which category we should place the thread channel in
         let newThreadCategoryId = (hookResult && hookResult.categoryId) || opts.categoryId || null;
@@ -227,12 +232,7 @@ async function createNewThreadForUser(user, opts = {}) {
         try {
           if (utils.isThreadInboxMode()) {
             const parentChannel = utils.getInboxThreadParentChannel();
-            createdChannel = await parentChannel.createThread({
-              autoArchiveDuration: config.threadAutoArchiveDuration,
-              name: replacedChannelName,
-              reason: "New Modmail thread",
-              type: Eris.Constants.ChannelTypes.GUILD_PUBLIC_THREAD,
-            });
+            createdChannel = await createPrivateInboxThread(parentChannel, replacedChannelName);
           } else {
             // Figure out which category we should place the thread channel in
             let newThreadCategoryId = (hookResult && hookResult.categoryId) || opts.categoryId || null;
