@@ -64,6 +64,10 @@ async function addPrivateThreadMembers(threadChannel, mentionRoles = config.ment
     try {
       await bot.joinThread(threadChannel.id, userId);
     } catch (err) {
+      if (err.code === 50001 || err.code === 50013 || err.message === "Missing Access" || err.message === "Missing Permissions") {
+        continue;
+      }
+
       console.warn(`[WARN] Failed to add ${userId} to private thread ${threadChannel.id}: ${err.message}`);
     }
   }
